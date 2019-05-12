@@ -1,0 +1,339 @@
+#include "GApp.h"
+
+#define ALIGN_SIZE(value,align_value)	((((value)/(align_value))+1)*(align_value))
+#define CHECK_GROW_TO_SIZE(newSize)		{ if ((newSize)>NrElemente) { CHECK(Grow(newSize),false,"Unable to grow to %u bytes",newSize); } }
+
+int  _Do_BinarySearch(unsigned char *Data,int ElementSize,void *Element,_BinarySearchCompFunction compFunction,int lo,int hi)
+{
+	int mij;
+	int res;
+
+	do
+	{
+		mij=(lo+hi)/2;
+		if ((res=compFunction(Element,&Data[mij*ElementSize]))==0) return mij;
+		if (res<0) hi=mij-1;
+		if (res>0) lo=mij+1;
+	} while ((lo<=hi) && (hi>=0));
+	return -1;
+}
+int  _Get_InsertSort_Locus(unsigned char *Data,int ElementSize,void *Element,_BinarySearchCompFunction compFunction,int lo,int hi,bool ascending)
+{
+	int mij;
+	int res;
+	if(ascending == false){//redundant code for fater execution
+		do
+		{
+			mij=(lo+hi)/2;
+			if ((res=-compFunction(Element,&Data[mij*ElementSize]))==0) return mij;
+			if (res<0) hi=mij-1;
+			if (res>0) lo=mij+1;
+		} while ((lo<=hi) && (hi>=0));
+	}
+	else{
+		do
+		{
+			mij=(lo+hi)/2;
+			if ((res=compFunction(Element,&Data[mij*ElementSize]))==0) return mij;
+			if (res<0) hi=mij-1;
+			if (res>0) lo=mij+1;
+		} while ((lo<=hi) && (hi>=0));
+	}
+	
+
+	if( res<0 ) return lo;
+	else return hi+1;
+}
+void __ElementsSwap(unsigned char *e1,unsigned char *e2,unsigned int ElementSize)
+{
+	unsigned char Temp[1024];
+	
+	if (ElementSize<1024)
+	{
+		memcpy(Temp,e1,ElementSize);
+		memcpy(e1,e2,ElementSize);
+		memcpy(e2,Temp,ElementSize);
+	} else {
+		for (unsigned int tr=0;tr<ElementSize;tr++,e1++,e2++)
+		{
+			Temp[0] = (*e1);
+			(*e1) = (*e2);
+			(*e2) = Temp[0];
+		}
+	}
+}
+void __HeapSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cmpFunc,int nrElements,bool ascendent) 
+{
+    unsigned char	*tempElement;	// echivalentul lui t
+	unsigned char	tempData[1024];
+    unsigned int	n = nrElements, parent = nrElements/2, index, child; 
+
+	if (ElementSize<=1024)
+	{
+		tempElement = tempData;
+	} else {
+		if ((tempElement = new unsigned char[ElementSize])==NULL)
+			return;
+	}
+
+	if (ascendent)
+	{
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize])>0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement)>0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	} else {
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize])<0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement)<0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	}
+	if (ElementSize>1024)
+		delete tempElement;
+}
+void __HeapSortContext(unsigned char *Data,int ElementSize,_ContextCompFunction cmpFunc,int nrElements,bool ascendent,void *Context) 
+{
+    unsigned char	*tempElement;	// echivalentul lui t
+	unsigned char	tempData[1024];
+    unsigned int	n = nrElements, parent = nrElements/2, index, child; 
+
+	if (ElementSize<=1024)
+	{
+		tempElement = tempData;
+	} else {
+		if ((tempElement = new unsigned char[ElementSize])==NULL)
+			return;
+	}
+
+	if (ascendent)
+	{
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize],Context)>0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement,Context)>0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	} else {
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize],Context)<0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement,Context)<0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	}
+	if (ElementSize>1024)
+		delete tempElement;
+}
+//===================================================================================================================
+GApp::Utils::Vector::Vector(void)
+{
+	NrElemente=ElementSize=AlocatedElements=0;	
+	Data=NULL;
+}
+
+GApp::Utils::Vector::~Vector(void)
+{
+	Free();
+}
+bool GApp::Utils::Vector::Grow(unsigned int newSize)
+{
+	unsigned char *tmp;
+
+	newSize = MAX(ALIGN_SIZE(newSize,16),AlocatedElements);
+	if ((newSize>AlocatedElements) || (Data==NULL))
+	{
+		CHECK((tmp = new unsigned char[newSize*ElementSize])!=NULL,false,"Unable to allocate %u bytes",newSize*ElementSize);
+		if (Data!=NULL)
+		{
+			memcpy(Data,tmp,AlocatedElements * ElementSize);
+			delete Data;
+		} 
+		Data = tmp;
+		AlocatedElements=newSize;
+	}
+	return true;
+}
+void GApp::Utils::Vector::Free()
+{
+	if (Data!=NULL) 
+		delete Data;
+	NrElemente=ElementSize=AlocatedElements=0;	
+	Data=NULL;
+}
+bool GApp::Utils::Vector::Create(unsigned int ElemSize,unsigned int alocElements)
+{
+	Free();
+	alocElements = ALIGN_SIZE(alocElements,16);
+	CHECK(ElemSize>0,false,"Element size should be bigger than 0");
+	NrElemente=0;
+	AlocatedElements=alocElements;
+	ElementSize=ElemSize;
+	return true;
+}
+bool GApp::Utils::Vector::Push(void *Element)
+{
+	CHECK_GROW_TO_SIZE(NrElemente+1);
+	memcpy(&Data[NrElemente*ElementSize],Element,ElementSize);
+	NrElemente++;
+	return true;
+}
+bool GApp::Utils::Vector::Insert(void *Element,unsigned int index)
+{
+	CHECK_GROW_TO_SIZE(NrElemente+1);
+	if (index<NrElemente)
+	{
+		memmove(&Data[(index+1)*ElementSize],&Data[index*ElementSize],(NrElemente-index)*ElementSize);
+	} else {
+		index = NrElemente;
+	}
+	memcpy(&Data[index*ElementSize],Element,ElementSize);
+	NrElemente++;
+	return true;
+}
+bool GApp::Utils::Vector::Insert(void *Element,_BinarySearchCompFunction compFunc,bool ascendent)
+{
+	unsigned int index = 0;
+
+	// gasesti indexul in functie de cmpFunc si ascendent
+	if(NrElemente == 0){
+		return Insert(Element,0);
+	}
+	return Insert(Element,_Get_InsertSort_Locus(Data,ElementSize,Element,compFunc,0,NrElemente-1,ascendent));
+}
+bool GApp::Utils::Vector::CopyElement(unsigned int index,void *addr)
+{
+	if ((index>NrElemente) || (addr==NULL)) 
+		return false;
+	memcpy(addr,&Data[index *ElementSize],ElementSize);
+	return true;
+}
+void*GApp::Utils::Vector::Get(unsigned int index)
+{
+	if ((Data==NULL) || (index>=NrElemente))
+		return NULL;
+	return &Data[index * ElementSize];
+}
+
+bool GApp::Utils::Vector::Delete(unsigned int index)
+{
+	if ((index>NrElemente) || (Data==NULL)) 
+		return false;
+	// sterg efectiv elementele
+	if (index+1<NrElemente)
+	{
+		memcpy(&Data[index*ElementSize],&Data[(index+1)*ElementSize],(NrElemente-(index+1))*ElementSize);
+	}
+	NrElemente--;
+	return true;
+}
+bool GApp::Utils::Vector::Resize(unsigned int newSize)
+{
+	CHECK_GROW_TO_SIZE(newSize);
+	NrElemente=newSize;
+	return true;
+}
+bool GApp::Utils::Vector::DeleteAll()
+{
+	return Resize(0);
+}
+int  GApp::Utils::Vector::BinarySearch (void *ElementToFind,_BinarySearchCompFunction compFnc)
+{
+	if ((ElementToFind==NULL) || (Data==NULL) || (NrElemente==0))
+		return -1;
+	else
+		return _Do_BinarySearch(Data,ElementSize,ElementToFind,compFnc,0,NrElemente-1);
+}
+void GApp::Utils::Vector::Sort(_BinarySearchCompFunction cmpFunc,bool ascendet)
+{
+	if ((NrElemente>0) && (Data!=NULL))
+		__HeapSort(Data,ElementSize,cmpFunc,NrElemente,ascendet);
+}
+void GApp::Utils::Vector::Sort(_ContextCompFunction cmpFunc,bool ascendet,void *Context)
+{
+	if ((NrElemente>0) && (Data!=NULL))
+		__HeapSortContext(Data,ElementSize,cmpFunc,NrElemente,ascendet,Context);
+}

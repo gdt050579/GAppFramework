@@ -1,0 +1,6 @@
+﻿1>------ Build started: Project: GAppFramework, Configuration: Debug Win32 ------
+1>  GenericControl.cpp
+1>     Creating library E:\lucru\GavApps\GAppFramework\Lib\GAppFramework.lib and object E:\lucru\GavApps\GAppFramework\Lib\GAppFramework.exp
+1>  GAppFramework.vcxproj -> E:\lucru\GavApps\GAppFramework\Lib\GAppFramework.dll
+1>  [ALL-OK] - GApp header file created succesifully !
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========

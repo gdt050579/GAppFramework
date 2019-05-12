@@ -1,0 +1,7 @@
+- clasa Randerer - adaugat functii
+[DONE] - organizat apeluarile la API, Core, etc - schimbat totul pe un CoreContext
+- namespace Media
+- clasa OpenGL (4 windows) similara cu glew
+- clasa LocalDB
+- API-uri pentru scris in fisiere locale
+- clasa local file
