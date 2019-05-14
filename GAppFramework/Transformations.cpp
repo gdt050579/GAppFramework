@@ -323,7 +323,7 @@ void GApp::Animations::Elements::RectangleElement::Paint(AnimationObject * animO
 		return;
 	//__COMPUTE_ELEMENT_RECT__(this->WidthInPixels, this->Height,this->ScaleWidth,this->ScaleHeight);
 	//G_CONTEXT.DrawRectF(&r, 0, this->ColorTransform, 0, NULL, GAC_COORDINATES_PIXELS);
-	G_CONTEXT.DrawRectWH(LeftInPixels,TopInPixels,WidthInPixels*ScaleWidth,HeightInPixels*ScaleHeight,ColorTransform,0,0, NULL, GAC_COORDINATES_PIXELS);
+	G_CONTEXT.DrawRectWH(LeftInPixels,TopInPixels,WidthInPixels*ScaleWidth,HeightInPixels*ScaleHeight,0,ColorTransform,0, NULL, GAC_COORDINATES_PIXELS);
 }
 void GApp::Animations::Elements::ExclusionRectElement::Paint(AnimationObject * animObj)
 {
