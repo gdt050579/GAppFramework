@@ -3352,6 +3352,7 @@ namespace GApp
 				virtual void OnUpdateBlendColor(GApp::Animations::AnimationObject * animObj);
 				virtual void OnUpdateScale(GApp::Animations::AnimationObject * animObj);
 				virtual bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
+                virtual void RadioBoxCheck(int id, Element * obj);
 
 				float GetX(GApp::Animations::AnimationObject * animObj, bool pixels);
 				float GetY(GApp::Animations::AnimationObject * animObj, bool pixels);
@@ -3438,6 +3439,28 @@ namespace GApp
 				bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
 				void UpdateScreenRect(GApp::Animations::AnimationObject * animObj);
 			};
+            class EXPORT SimpleCheckBoxElement : public Element
+            {
+            public:
+                SimpleButtonFaceContainer	Checked, Unchecked, CheckedInactive, UncheckedInactive;
+                GApp::Resources::Sound*		ClickSound;
+                int							ClickEvent;
+                bool						Enabled;
+                bool						UseBackgoundImage;
+                bool						IsChecked;
+
+
+                void Paint(GApp::Animations::AnimationObject * animObj);
+                bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
+                void UpdateScreenRect(GApp::Animations::AnimationObject * animObj);
+            };
+            class EXPORT SimpleRadioBoxElement : public SimpleCheckBoxElement
+            {
+            public:
+                int Group;
+                bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
+                void RadioBoxCheck(int id, GApp::Animations::Elements::Element * obj);
+            };
 		};
 		namespace Transformations
 		{
@@ -3539,6 +3562,13 @@ namespace GApp
 				bool OnUpdate(GApp::Animations::AnimationObject * animObj);
 				void OnInit(GApp::Animations::AnimationObject * animObj);
 			};
+            class EXPORT AnimationEndEvent : public Transformation
+            {
+            public:
+                unsigned int EventID;
+                bool OnUpdate(GApp::Animations::AnimationObject * animObj);
+                void OnInit(GApp::Animations::AnimationObject * animObj);
+            };           
 			class EXPORT TouchStatus : public Transformation
 			{
 			public:
@@ -3902,11 +3932,13 @@ namespace GApp
 			virtual bool				ControlPaint(bool loop) = 0;
 			virtual void				SetZOrder(int index) = 0;
 			virtual bool				OnTouchEvent(GApp::Controls::TouchEvent *te) = 0;
+            virtual void                RadioBoxCheck(int groupID, GApp::Animations::Elements::Element * obj) = 0;
 
 			void						MoveWithOffset(float offsetX, float offsetY, GAC_TYPE_COORDINATES coord);
 			void						ResetMovementOffsets();
 			bool						ProcessTouchEvents(GApp::Controls::TouchEvent *te, Elements::Element* zOrder[], int zOrderElementsCount);
             void                        ExitPopupLoop();
+            void                        PerformRadioBoxCheck(int groupID, GApp::Animations::Elements::Element * obj, Elements::Element* elements[], int elementsCount);
 			
 		};
 	};

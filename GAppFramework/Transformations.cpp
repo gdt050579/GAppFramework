@@ -165,6 +165,18 @@ void GApp::Animations::AnimationObject::ExitPopupLoop()
 {
     REMOVE_BIT(Flags, ANIMATION_POPUP_LOOP_WAIT);
 }
+void GApp::Animations::AnimationObject::PerformRadioBoxCheck(int groupID, GApp::Animations::Elements::Element * obj, Elements::Element* elements[], int elementsCount)
+{
+    if (elementsCount == 0)
+        return;
+    Elements::Element** start = &elements[0];
+    Elements::Element** end = start + elementsCount;
+    while (start < end)
+    {
+        (*start)->RadioBoxCheck(groupID, obj);
+        start++;
+    }
+}
 //================================================================================================================================================================================================================================================
 GApp::Animations::Elements::Element::Element()
 {
@@ -258,7 +270,7 @@ void GApp::Animations::Elements::Element::UpdateScreenRect(GApp::Animations::Ani
 {
 	ComputeElementRect(animObj);
 }
-
+void GApp::Animations::Elements::Element::RadioBoxCheck(int id, GApp::Animations::Elements::Element * obj) { }
 
 //================================================================================================================================================================================================================================================
 void GApp::Animations::Elements::EntireSurfaceElement::Paint(AnimationObject * animObj)
@@ -449,6 +461,144 @@ bool GApp::Animations::Elements::SimpleButtonElement::OnTouchEvent(GApp::Animati
 		default:
 			return true;
 	}
+}
+void GApp::Animations::Elements::SimpleCheckBoxElement::UpdateScreenRect(GApp::Animations::AnimationObject * animObj)
+{
+    if (this->UseBackgoundImage)
+    {
+        SimpleButtonFaceContainer * face;
+        if (Enabled == false)
+        {
+            if (IsChecked)
+                face = &this->CheckedInactive;
+            else
+                face = &this->UncheckedInactive;
+        }
+        else {
+            if (IsChecked)
+                face = &this->Checked;
+            else
+                face = &this->Unchecked;
+        }
+
+        if (face->Background != NULL)
+        {
+            this->WidthInPixels = face->Background->Width;
+            this->HeightInPixels = face->Background->Height;
+        }
+        else {
+            this->WidthInPixels = 0;
+            this->HeightInPixels = 0;
+        }
+    }
+    ComputeElementRect(animObj);
+}
+void GApp::Animations::Elements::SimpleCheckBoxElement::Paint(AnimationObject * animObj)
+{
+    if (Visible == false)
+        return;
+    SimpleButtonFaceContainer * face;
+    if (Enabled == false)
+    {
+        if (IsChecked)
+            face = &this->CheckedInactive;
+        else
+            face = &this->UncheckedInactive;
+    }
+    else {
+        if (IsChecked)
+            face = &this->Checked;
+        else
+            face = &this->Unchecked;
+    }
+    // dreptunghiul e deja calculat
+    if (this->UseBackgoundImage)
+        AnimationPaintImage(animObj, face->Background, this->LeftInPixels, this->TopInPixels, GAC_ALIGNAMENT_TOPLEFT, this->ScaleWidth, this->ScaleHeight, face->BackgroundColorBlending);
+    else {
+        G_CONTEXT.DrawRectWH(LeftInPixels, TopInPixels, WidthInPixels*ScaleWidth, HeightInPixels*ScaleHeight, 0, face->BackgroundColorBlending, 0, NULL, GAC_COORDINATES_PIXELS);
+    }
+
+    // calculez noile pozitii
+    if (face->Symbol != NULL)
+    {
+        float xPixels = this->LeftInPixels + this->WidthInPixels*this->ScaleWidth*face->SymbolX;
+        float yPixels = this->TopInPixels + this->HeightInPixels*this->ScaleHeight*face->SymbolY;
+        AnimationPaintImage(animObj, face->Symbol, xPixels, yPixels, face->SymbolAlign, face->SymbolScaleWidth, face->SymbolScaleHeight, face->SymbolColorBlending);
+    }
+
+    // calculez si pentru Text
+    if (face->TP.TextFont != NULL)
+    {
+        float xPixels = this->LeftInPixels + this->WidthInPixels*this->ScaleWidth*face->TextRectX;
+        float yPixels = this->TopInPixels + this->HeightInPixels*this->ScaleHeight*face->TextRectY;
+        face->TP.SetViewRectWH(xPixels, yPixels, face->TextRectAlign, face->TextRectWidth*this->ScaleWidth, face->TextRectHeight*this->ScaleHeight);
+        face->TP.SetColorBlending(face->TextColorBlending);
+        G_CONTEXT.DrawString(&face->TP);
+    }
+}
+bool GApp::Animations::Elements::SimpleCheckBoxElement::OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te)
+{
+    if (this->Enabled == false)
+        return false;
+    GApp::Graphics::RectF r;
+    //LOG_INFO("SimpleButtonElement::OnTouchEvent(Type=%d,EventID=%d)",te->Type,this->ClickEvent);
+    switch (te->Type)
+    {
+    case GAC_TOUCHEVENTTYPE_DOWN:
+        if ((te->X >= this->LeftInPixels) && (te->X <= (this->LeftInPixels + this->WidthInPixels*this->ScaleWidth)) &&
+            (te->Y >= this->TopInPixels) && (te->Y <= (this->TopInPixels + this->HeightInPixels*this->ScaleHeight)))
+            return true;
+        return false;
+    case GAC_TOUCHEVENTTYPE_UP:
+    case GAC_TOUCHEVENTTYPE_CLICK:
+        if ((te->X >= this->LeftInPixels) && (te->X <= (this->LeftInPixels + this->WidthInPixels*this->ScaleWidth)) &&
+            (te->Y >= this->TopInPixels) && (te->Y <= (this->TopInPixels + this->HeightInPixels*this->ScaleHeight)))
+            {
+                this->IsChecked = !this->IsChecked;
+                if (this->ClickEvent>=0)
+                    animObj->RaiseEvent(this->ClickEvent);                
+                if (this->ClickSound != NULL)
+                    (((GApp::UI::CoreSystem *)(animObj->CoreContext))->AudioInterface).Play(this->ClickSound);
+            }
+        return false; // nu mai vreau sa am eu touch-ul
+    default:
+        return true;
+    }
+}
+bool GApp::Animations::Elements::SimpleRadioBoxElement::OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te)
+{
+    if (this->Enabled == false)
+        return false;
+    GApp::Graphics::RectF r;
+    //LOG_INFO("SimpleButtonElement::OnTouchEvent(Type=%d,EventID=%d)",te->Type,this->ClickEvent);
+    switch (te->Type)
+    {
+    case GAC_TOUCHEVENTTYPE_DOWN:
+        if ((te->X >= this->LeftInPixels) && (te->X <= (this->LeftInPixels + this->WidthInPixels*this->ScaleWidth)) &&
+            (te->Y >= this->TopInPixels) && (te->Y <= (this->TopInPixels + this->HeightInPixels*this->ScaleHeight)))
+            return true;
+        return false;
+    case GAC_TOUCHEVENTTYPE_UP:
+    case GAC_TOUCHEVENTTYPE_CLICK:
+        if ((te->X >= this->LeftInPixels) && (te->X <= (this->LeftInPixels + this->WidthInPixels*this->ScaleWidth)) &&
+            (te->Y >= this->TopInPixels) && (te->Y <= (this->TopInPixels + this->HeightInPixels*this->ScaleHeight)))
+        {
+            animObj->RadioBoxCheck(this->Group, this);
+            if (this->ClickEvent>=0)
+                animObj->RaiseEvent(this->ClickEvent);
+            if (this->ClickSound != NULL)
+                (((GApp::UI::CoreSystem *)(animObj->CoreContext))->AudioInterface).Play(this->ClickSound);
+        }
+        return false; // nu mai vreau sa am eu touch-ul
+    default:
+        return true;
+    }
+}
+void GApp::Animations::Elements::SimpleRadioBoxElement::RadioBoxCheck(int id, GApp::Animations::Elements::Element * obj)
+{
+    if (id != Group)
+        return;
+    this->IsChecked = (obj == this);
 }
 //================================================================================================================================================================================================================================================
 Transformation::Transformation()
@@ -652,6 +802,16 @@ void Event::OnInit(AnimationObject * animObj)
 bool Event::OnUpdate(AnimationObject * animObj)
 {
 	return false;
+}
+//================================================================================================================================================================================================================================================
+void AnimationEndEvent::OnInit(AnimationObject * animObj)
+{    
+}
+bool AnimationEndEvent::OnUpdate(AnimationObject * animObj)
+{
+    LOG_INFO("Set default event for animation end to %d", EventID);
+    animObj->AnimationEndEventID = EventID;
+    return false;
 }
 //================================================================================================================================================================================================================================================
 void TouchStatus::OnInit(AnimationObject * animObj)

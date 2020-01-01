@@ -11,14 +11,14 @@ result = sys.argv[1]
 if os.path.exists(result):
 	try:
 		os.unlink(result)
-	except Exception,e:
-		print "[ERROR] - Unable to delete: "+result
-		print e
+	except Exception as e:
+		print("[ERROR] - Unable to delete: "+result)
+		print(e)
 		raise SystemExit	
 
 try:
 	add = True
-	for line in open(os.path.join(path,"GAppFramework","GApp.h"),"rb"):
+	for line in open(os.path.join(path,"GAppFramework","GApp.h"),"rt"):
 		if "//[REMOVE-IN-DEVELOP-LIB:START]" in line:
 			add = False
 			continue
@@ -34,11 +34,11 @@ try:
 			if line.lstrip().startswith("#"):
 				line = line.lstrip()
 			s += line
-	print "[CREATE] - "+result
-	open(result,"wb").write(s)
-	print "[ALL-OK] - GApp header file created succesifully !"
+	print("[CREATE] - "+result)
+	open(result,"wt").write(s)
+	print("[ALL-OK] - GApp header file created succesifully !")
 	
-except Exception,e:
-	print "[ERROR] Exception creating GApp.h file !"
-	print e
-	raise SystemExit
+except Exception as e:
+	print("[ERROR] Exception creating GApp.h file !")
+	print(e)
+	raise(SystemExit)
