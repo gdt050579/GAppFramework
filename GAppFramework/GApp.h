@@ -1503,7 +1503,7 @@ namespace GApp
 			bool			IsPaused();
 			unsigned int	GetValue();
 		};
-		struct DateTime
+		struct EXPORT DateTime
 		{
 			unsigned int Year;
 			unsigned int Month;
@@ -1512,6 +1512,9 @@ namespace GApp
 			unsigned int Minute;
 			unsigned int Second;
 			unsigned int DayOfWeek;
+
+            unsigned int ToDaysFromYear0();
+            bool CreateFromDaysFromYear0(unsigned int days);
 		};
 		struct SceneTimer
 		{
@@ -3352,6 +3355,7 @@ namespace GApp
 				virtual void OnUpdateBlendColor(GApp::Animations::AnimationObject * animObj);
 				virtual void OnUpdateScale(GApp::Animations::AnimationObject * animObj);
 				virtual bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
+                virtual void CancelTouch(GApp::Animations::AnimationObject * animObj);
                 virtual void RadioBoxCheck(int id, Element * obj);
 
 				float GetX(GApp::Animations::AnimationObject * animObj, bool pixels);
@@ -3437,6 +3441,7 @@ namespace GApp
 
 				void Paint(GApp::Animations::AnimationObject * animObj);
 				bool OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te);
+                void CancelTouch(GApp::Animations::AnimationObject * animObj);
 				void UpdateScreenRect(GApp::Animations::AnimationObject * animObj);
 			};
             class EXPORT SimpleCheckBoxElement : public Element
@@ -3917,7 +3922,7 @@ namespace GApp
             int                         AnimationEndEventID;
 			Elements::Element*			TouchCaptureElement;
 		public:
-
+            AnimationObject() { TouchCaptureElement = NULL; }
 
 			bool						Start();
 			bool						Stop();

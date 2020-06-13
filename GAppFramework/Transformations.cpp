@@ -125,10 +125,12 @@ void GApp::Animations::AnimationObject::ResetMovementOffsets()
 }
 bool GApp::Animations::AnimationObject::ProcessTouchEvents(GApp::Controls::TouchEvent *te, Elements::Element* zOrder[], int zOrderElementsCount)
 {
+    if ((zOrder == NULL) || (zOrderElementsCount <= 0))
+        return false;
 	if (te->Type == GAC_TOUCHEVENTTYPE_DOWN)
 	{
 		if (TouchCaptureElement != NULL)
-			TouchCaptureElement->OnTouchEvent(this, NULL); // NULL in sensul de cancel al celuilat eveniment
+			TouchCaptureElement->CancelTouch(this);
 		TouchCaptureElement = NULL;
 		Elements::Element** it = (&zOrder[0]) + zOrderElementsCount;
 		Elements::Element* elem;
@@ -136,7 +138,7 @@ bool GApp::Animations::AnimationObject::ProcessTouchEvents(GApp::Controls::Touch
 		while (it >= zOrder)
 		{
 			elem = *it;
-			if ((elem->CanProcessTouchEvents) && (elem->Visible))
+			if ((elem) && (elem->CanProcessTouchEvents) && (elem->Visible))
 			{
 				if (elem->OnTouchEvent(this, te))
 				{
@@ -205,6 +207,10 @@ void GApp::Animations::Elements::Element::OnUpdateScale(GApp::Animations::Animat
 bool GApp::Animations::Elements::Element::OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te)
 {
 	return false;
+}
+void GApp::Animations::Elements::Element::CancelTouch(GApp::Animations::AnimationObject * animObj)
+{
+
 }
 float GApp::Animations::Elements::Element::GetX(GApp::Animations::AnimationObject * animObj, bool pixels)
 {
@@ -424,6 +430,10 @@ void GApp::Animations::Elements::SimpleButtonElement::Paint(AnimationObject * an
 		face->TP.SetColorBlending(face->TextColorBlending);
 		G_CONTEXT.DrawString(&face->TP);
 	}
+}
+void GApp::Animations::Elements::SimpleButtonElement::CancelTouch(GApp::Animations::AnimationObject * animObj)
+{
+    this->IsPressed = false;
 }
 bool GApp::Animations::Elements::SimpleButtonElement::OnTouchEvent(GApp::Animations::AnimationObject * animObj, GApp::Controls::TouchEvent *te)
 {

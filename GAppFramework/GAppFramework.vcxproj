@@ -106,6 +106,7 @@
     <ClCompile Include="AnimationButton.cpp" />
     <ClCompile Include="AnimationControl.cpp" />
     <ClCompile Include="AnimationPopup.cpp" />
+    <ClCompile Include="DateTime.cpp" />
     <ClCompile Include="Presentation.cpp" />
     <ClCompile Include="PresentationControl.cpp" />
     <ClCompile Include="APIInterface.cpp" />
